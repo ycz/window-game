@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Window Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <style type="text/css">
+        html,
+        body {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #character {
+            position: fixed;
+            padding: 0;
+            margin: 0;
+            left: 100px;
+            top: 0px;
+            height: auto;
+            width: auto;
+            max-height: 50px;
+        }
+    </style>
+    <script type="text/javascript">
+        FRAME_LENGTH = 1000.0 / 60;
+        GRAVITY_ACCELERATION = 0.2;
+        BOTTOM_BOUNCINESS = 0.3;
+        WINDOW_SIZE_HISTORY_LENGTH = 3;
+
+        function startPhysicsForObject(myObject) {
+            let body = document.getElementById('body');
+            let windowHeight = body.clientHeight;
+            let downVelocity = 0;
+            let windowDeltaHistory = Array(WINDOW_SIZE_HISTORY_LENGTH).map(_.constant(0));
+            function windowDeltaAverageSpeed() {
+                let windowDeltaSlice = windowDeltaHistory.slice(windowDeltaHistory.length - WINDOW_SIZE_HISTORY_LENGTH);
+                // console.log(windowDeltaSlice);
+                return _.reduce(windowDeltaSlice, function(x, y) {
+                    return x + y;
+                }) / WINDOW_SIZE_HISTORY_LENGTH;
+            }
+            function timeStep() {
+                let newWindowHeight = body.clientHeight;
+                windowDeltaHistory.push(newWindowHeight - windowHeight);
+                let maxPosition = newWindowHeight - myObject.getBoundingClientRect().height;
+                downVelocity += GRAVITY_ACCELERATION;
+                let newPosition = myObject.getBoundingClientRect().top + downVelocity;
+                if (newPosition > maxPosition) {
+                    myObject.style.top = maxPosition + 'px';
+                    downVelocity = Math.min(-downVelocity * BOTTOM_BOUNCINESS + windowDeltaAverageSpeed(), 0);
+                } else if (newPosition < 0) {
+                    myObject.style.top = '0px';
+                    downVelocity = 0;
+                } else {
+                    myObject.style.top = newPosition + 'px';
+                }
+                windowHeight = newWindowHeight;
+            }
+            setInterval(timeStep, FRAME_LENGTH);
+        }
+        window.onload = function () {
+            let character = document.getElementById('character');
+            startPhysicsForObject(character);
+        };
+    </script>
+</head>
+
+<body id="body">
+    <!-- <input id="character" type="date"> -->
+    <img id="character" src="think_3d.gif">
+</body>
+
+</html>
